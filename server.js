@@ -1,9 +1,8 @@
+
 require("dotenv").config();
 
 const express = require("express");
 const mysql = require("mysql2/promise");
-
-
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,7 +12,7 @@ const dbConfig = {
     port: Number(process.env.DB_PORT) || 3307,
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "raktar_db",
+    database: process.env.DB_NAME || "raktar",
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0
@@ -27,10 +26,11 @@ app.get("/", (req, res) => {
     res.send("A JSON szerver működik!");
 });
 
-app.get('/termekek', async (req, res) => {
+// 1. Összes termék ár szerint növekvő sorrendben
+app.get("/termekek", async (req, res) => {
     try {
-        const [eredmeny] = await db.query(`
-            SELECT 
+        const [eredmeny] = await pool.query(`
+            SELECT
                 termekek.id,
                 termekek.nev,
                 termekek.ar,
@@ -38,7 +38,8 @@ app.get('/termekek', async (req, res) => {
                 termekek.elerheto,
                 kategoriak.nev AS kategoria_nev
             FROM termekek
-            INNER JOIN kategoriak ON termekek.kategoria_id = kategoriak.id
+            INNER JOIN kategoriak
+                ON termekek.kategoria_id = kategoriak.id
             ORDER BY termekek.ar ASC
         `);
 
@@ -48,11 +49,10 @@ app.get('/termekek', async (req, res) => {
     }
 });
 
-
-
-app.get('/termekek/elerheto', async (req, res) => {
+// 2. Elérhető termékek
+app.get("/termekek/elerheto", async (req, res) => {
     try {
-        const [eredmeny] = await db.query(`
+        const [eredmeny] = await pool.query(`
             SELECT *
             FROM termekek
             WHERE elerheto = 1 AND keszlet > 0
@@ -64,13 +64,12 @@ app.get('/termekek/elerheto', async (req, res) => {
     }
 });
 
-
-
-app.get('/termekek/kereses/:szoveg', async (req, res) => {
+// 3. Termék keresése név alapján
+app.get("/termekek/kereses/:szoveg", async (req, res) => {
     try {
         const szoveg = req.params.szoveg;
 
-        const [eredmeny] = await db.query(`
+        const [eredmeny] = await pool.query(`
             SELECT *
             FROM termekek
             WHERE nev LIKE CONCAT('%', ?, '%')
@@ -82,17 +81,17 @@ app.get('/termekek/kereses/:szoveg', async (req, res) => {
     }
 });
 
-
-
-app.get('/kategoriak/statisztika', async (req, res) => {
+// 4. Kategóriák statisztikája
+app.get("/kategoriak/statisztika", async (req, res) => {
     try {
-        const [eredmeny] = await db.query(`
+        const [eredmeny] = await pool.query(`
             SELECT
                 kategoriak.nev AS kategoria_nev,
                 COUNT(termekek.id) AS termekek_szama,
                 ROUND(AVG(termekek.ar), 1) AS atlagos_ar
             FROM kategoriak
-            INNER JOIN termekek ON kategoriak.id = termekek.kategoria_id
+            INNER JOIN termekek
+                ON kategoriak.id = termekek.kategoria_id
             GROUP BY kategoriak.id, kategoriak.nev
         `);
 
@@ -102,11 +101,10 @@ app.get('/kategoriak/statisztika', async (req, res) => {
     }
 });
 
-
-
-app.get('/termekek/dragak', async (req, res) => {
+// 5. Drága termékek (10 000 Ft felett)
+app.get("/termekek/dragak", async (req, res) => {
     try {
-        const [eredmeny] = await db.query(`
+        const [eredmeny] = await pool.query(`
             SELECT
                 nev,
                 ar,
@@ -123,7 +121,5 @@ app.get('/termekek/dragak', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(
-        `A szerver fut: http://localhost:${PORT}`
-    );
+    console.log(`A szerver fut: http://localhost:${PORT}`);
 });
