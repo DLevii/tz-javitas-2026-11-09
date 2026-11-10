@@ -123,3 +123,23 @@ app.get("/termekek/dragak", async (req, res) => {
 app.listen(PORT, () => {
     console.log(`A szerver fut: http://localhost:${PORT}`);
 });
+
+app.listen(PORT, () => {
+    console.log(`1-es feladat: http://localhost:${PORT}/termekek`);
+});
+
+app.listen(PORT, () => {
+    console.log(`2-es feladat: http://localhost:${PORT}/termekek/elerheto`);
+});
+
+app.listen(PORT, () => {
+    console.log(`3-as feladat: http://localhost:${PORT}/termekek/kereses/:szoveg`);
+});
+
+app.listen(PORT, () => {
+    console.log(`4-es feladat: http://localhost:${PORT}/termekek/statisztika`);
+});
+
+app.listen(PORT, () => {
+    console.log(`5-ös feladat: http://localhost:${PORT}/termekek/dragak`);
+});
